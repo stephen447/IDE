@@ -2,6 +2,7 @@
   "devDependencies": {
     "@webpack-cli/generators": "^3.0.7",
     "css-loader": "^6.7.3",
+    "cypress": "^12.17.1",
     "html-webpack-plugin": "^5.5.1",
     "mini-css-extract-plugin": "^2.7.2",
     "prettier": "^2.8.8",
@@ -11,6 +12,8 @@
     "webpack-dev-server": "^4.15.0"
   },
   "dependencies": {
+    "@codemirror/language-data": "^6.3.1",
+    "@uiw/codemirror-extensions-hyper-link": "^4.21.7",
     "codemirror": "^5.44.0"
   },
   "version": "1.0.0",

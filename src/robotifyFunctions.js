@@ -1,0 +1,2 @@
+export const robotifyFunctions = new Set(['alli', 'axel', 'byte', 'chess', 'current_drone', 'deliveries', 'drone1', 'drone2', 'drone3', 'drone4', 'environment', 'fleet_control', 'flex', 'info', 'player', 'mission_control', 'robot', 'robot1', 'robot2', 'robot3', 'satellite', 'spaceship', 'trees', 'trip', 'VRADDrone'])
+export default robotifyFunctions
