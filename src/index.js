@@ -32,6 +32,10 @@ import { parse } from "./errorChecker.js"
 import './themeEditor.js'
 import {setFont} from './themeEditor.js'
 
+// hyper link extensions
+import { hyperLink, hyperLinkExtension, hyperLinkStyle } from '@uiw/codemirror-extensions-hyper-link';
+
+
 //initial code put into the editor
 let startCode = 
 `
@@ -59,6 +63,7 @@ for x in range(3):
 
 # Print the collected animal locations.
 print(animal_locations)
+https://www.google.com
 `
 
 //the editor on the left, does not respond to CSS changes
@@ -70,17 +75,39 @@ var originalEditor = CodeMirror(document.getElementById("originalEditor"), {
     matchBrackets: true,
     autoCloseBrackets: true,
     search: true,
+    extensions: hyperLink,
     lint: true, //uses CodeMirror.lint.mode, in this case CodeMirror.lint.python
     extraKeys: {
         "Esc": function(cm) {cm.display.input.blur()},  //leave focus on the editor with Esc
         "Ctrl-Space": async function(cm) { cm.showHint({
             hint: hintFunc,         // show autocompletion
             completeSingle: false   //does not autocomplete when there is only a single match
-        })}
+        })},
+        "LeftTripleClick": function(){
+            // Get the click position
+            var click_coord = originalEditor.cursorCoords()
+            var click_coords = {left: click_coord.left, top: click_coord.top};
+            
+            // Get the position of the click in the editor in terms of line and character index
+            var db_click_position = originalEditor.coordsChar(click_coords);
+            var line = db_click_position.line
+            var char = db_click_position.ch
+
+            // Get the token at the click position
+            var token = originalEditor.getTokenAt({line: line, ch: char})
+
+            // Check token to see if its a builtin function, can then redirect to corresponsing page
+            if (token.type=='builtin'){
+                var keyword = token.string
+                var url = 'https://docs.python.org/3/library/functions.html#'+keyword
+                window.open(url)
+            }
+        }
     },
     gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
     theme: "constTheme"
 });
+
 
 //the editor on the right, DOES respond to CSS changes
 var previewEditor = CodeMirror(document.getElementById("previewEditor"), {
@@ -97,7 +124,30 @@ var previewEditor = CodeMirror(document.getElementById("previewEditor"), {
         "Ctrl-Space": async function(cm) { cm.showHint({
             hint: hintFunc,
             completeSingle: false
-        })}
+        })},
+        "LeftTripleClick": function(){
+            /**
+             * Get the click position, get the token at the click position, if token is a builtin, redirect otherwise do nothing
+             */
+            // Get the click position
+            var click_coord = previewEditor.cursorCoords()
+            var click_coords = {left: click_coord.left, top: click_coord.top};
+            
+            // Get the position of the click in the editor in terms of line and character index
+            var db_click_position = previewEditor.coordsChar(click_coords);
+            var line = db_click_position.line
+            var char = db_click_position.ch
+
+            // Get the token at the click position
+            var token = previewEditor.getTokenAt({line: line, ch: char})
+
+            // Check token to see if its a builtin function, can then redirect to corresponsing page
+            if (token.type=='builtin'){
+                var keyword = token.string
+                var url = 'https://docs.python.org/3/library/functions.html#'+keyword
+                window.open(url)
+            }
+        }
     },
     gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
     theme: "theme"
@@ -120,6 +170,7 @@ booleanForm.addEventListener('submit', (e) => {
     previewEditor.refresh();
   
 })
+
 
 //sets options for BOTH editors
 function setEditorsOptions(option, value)
