@@ -1,9 +1,8 @@
-
+import 'cypress-time-marks'
 describe('Documentation links tests', () => {
   it('Robotify function', () => {
     let expected_url = 'https://www.robotify.com/'
-    let startTime = performance.now()
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
@@ -11,52 +10,51 @@ describe('Documentation links tests', () => {
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
 
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
-    let testDuraction = performance.now()-startTime
-    cy.log("Test duration:", testDuraction)
-    cy.log("Start time", startTime)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
+    
+    
   })
   it('Python function', () => {
     let expected_url = 'https://docs.python.org/3/library/functions.html#abs'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 200
     let yPos = 410
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Random token', () => {
     let expected_url = 'home'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 140
     let yPos = 400
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Edge Case: Space in front of import', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 150
     let yPos = 160
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Edge Case: Alternative name import', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
-    let editor = cy.get('[data-cy="editor"]')
+    cy.visit('http://localhost:8080').timeMark('visit')
+    let editor = cy.get('[data-cy="editor"]').timeSince('visit')
     // Click position
     let xPos = 180
     let yPos = 190
@@ -67,43 +65,43 @@ describe('Documentation links tests', () => {
   })
   it('Edge Case: Multiple imports', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
     let yPos = 225
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Edge Case: Alternative name function import', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
     let yPos = 205
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Edge Case:  Function redefinition', () => {
     let expected_url = 'home'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
     let yPos = 345
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Triple clicking 2 Robotify functions', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
@@ -115,12 +113,12 @@ describe('Documentation links tests', () => {
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
 
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
   it('Triple clicking 3 Robotify functions', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
@@ -136,13 +134,13 @@ describe('Documentation links tests', () => {
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
 
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
   })
 
   it('Triple clicking 4 Robotify functions', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
+    cy.visit('http://localhost:8080').timeMark('visit')
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
@@ -162,14 +160,15 @@ describe('Documentation links tests', () => {
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
 
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
+    
   })
 
   it('Triple clicking 5 Robotify functions', () => {
     let expected_url = 'https://www.robotify.com/'
-    cy.visit('http://localhost:8080')
-    let startTime = performance.now()
+    cy.visit('http://localhost:8080').timeMark('visit')
+    let startTime = new Date()
     let editor = cy.get('[data-cy="editor"]')
     // Click position
     let xPos = 180
@@ -193,11 +192,9 @@ describe('Documentation links tests', () => {
     editor.click(xPos, yPos).click(xPos, yPos).click(xPos, yPos)
 
     let url = cy.get('[data-cy="hiddenURL"]')
-    url.should('have.text', expected_url)
-    let testDuraction = performance.now()-startTime
-    cy.log("Test Duration: ", testDuraction)
+    url.should('have.text', expected_url).timeSince('visit')
     //cy.contains(expected_url)
-  })
-  
-  
+    
+    
+  })  
 })

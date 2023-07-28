@@ -27,20 +27,61 @@ import { hintFunc } from "./hinting.js";
 //linting
 import 'codemirror/addon/lint/lint.js'
 import { parse } from "./errorChecker.js"
+// Undeclared vaiables
+import {getDeclaredVariables} from "./undeclaredVariables"
+// Highlighting unused variables
+import { getImports } from "./documentation";
 
 import './themeEditor.js'
 import {setFont} from './themeEditor.js'
-
 //Robotify functions
 import robotifyFunctions from './robotifyFunctions.js'
-var alternativeModuleNames = new Set() // Set for the alternative module names
-var manuallyimportedFunctions = new Set() // Set for the manually imported functions from modules
+let alternativeModuleNames = new Set()
+let manuallyimportedFunctions = new Set()
+
+import { getImportPositions } from "./documentation";
+
+import { getImportedModules } from "./getImportedModules";
+
+
+
 //Hidden HTML element for keeping state of the redirect URL's for documentation which is used for verification and testing functionality
 const hiddenURL = document.getElementById("hiddenURL");
 hiddenURL.innerHTML = "home"
-
+let startCo = ``
 //initial code put into the editor
-let startCode = 
+let startCode = `import codeMirror # Standard import
+import axel # Standard Robotify import
+import math as m # Alternative standard import
+import byte as b # Alternative Robotify import
+import numpy, tensorflow # Multiple standard imports
+import deliveries, spaceship # Multiple Robotify imports
+from deliveries import get_distance # Simple manual import
+from b import catch_ball, drop_ball # Multiple manual import
+
+catch_ball # Robotify function
+x=y
+standardDefinition=4 # Standard definition
+print(standardDefinition)
+x = h = 5 # Valid multiple declaration
+st = sh = sb # Invalid multiple declaration
+
+validVariableDefinition = x
+stringDefinition = "hello"
+invalidVariableDefinition = st
+validIntVarDefinition = 4*x
+invalidIntVarDefinition = 4*st
+del(x)
+print(x)
+
+def user_function(): # User defined function
+    return 1
+
+for y in range(0, z): # For loop
+    print(y)
+
+`
+let startCod = 
 ` import flex # Simple import
 import   chess # Multiple spaces between 'import' and the module
 import axel as axel_robot # Alternative name for module
@@ -98,56 +139,16 @@ for x in range(3):
 # Print the collected animal locations.
 print(animal_locations)
 `
-function getImports(totalNumLines){
-    /**
-     * Function which get the alternative names of the imported robotify modules and the names of the manually importing functions from robotify modules
-     */
-    //const totalNumLines = originalEditor.lineCount() // Number of lines in editor
-    
-    for(let lineNum = 0; lineNum<totalNumLines; lineNum++){ // Going through the the editor looking for imports
-        let lineTokens = originalEditor.getLineTokens(lineNum, true) // Getting the line tokens
-        let start = 0 // Start position of the line - used for skipping white spaces/tab indents
-    
-        if(lineTokens.length>3){ // Need minimum six tokens in a line for an import
-            let startToken = lineTokens[0].string // Getting the start token
-            let startTokenType = lineTokens[0].type // Getting first token type for identifying tab indent
-            if(startToken==' '||startTokenType==null){ // If start token is a space/tab indent - shift starttoken by 1
-                start++
-                startToken = lineTokens[1].string
-            }
-            // 2 import cases - 'import x as y', 'from x import y...'
-            if(startToken=='import'){
-                if(lineTokens[start+4].string=='as'){ // If there is an alternative name, need to store otherwise it is stored
-                    if(robotifyFunctions.has(lineTokens[start+2].string)==true){ // If its stored already, no need to duplicate
-                        alternativeModuleNames.add(lineTokens[start+6].string)
-                    }
-                }
-            }
-            // If importing from a robotify module
-            else if(startToken=='from'&&(robotifyFunctions.has(lineTokens[start+2].string)||alternativeModuleNames.has(lineTokens[start+2].string))){
-                for(let lineTokenNum = start+6; lineTokenNum<lineTokens.length; lineTokenNum++){ // search through rest of the line for functions
-                    if(lineTokens[lineTokenNum].string!=','&&lineTokens[lineTokenNum].string!='*'&&lineTokens[lineTokenNum].string!=' '&&lineTokens[lineTokenNum].type!='comment'){ // If the import is a function, add to functions list
-                        manuallyimportedFunctions.add(lineTokens[lineTokenNum].string)
-                    }
-                }
-            }
-            // If an imported function has been redefined it overrides the module imported function, so delete from list
-            else if(lineTokens[start+2].type=='def'){
-                if(manuallyimportedFunctions.has(lineTokens[start+2].string)){
-                    manuallyimportedFunctions.delete(lineTokens[start+2].string)
-                }
-            }
-        }
-    }
-}
+
+
 
 //the editor on the left, does not respond to CSS changes
-var originalEditor = CodeMirror(document.getElementById("originalEditor"), {
+export var originalEditor = CodeMirror(document.getElementById("originalEditor"), {
     value: startCode,
     mode:  "python",
     lineNumbers: true,
     foldGutter: true,
-    matchBrackets: true,
+    matchBrackets: true, // Highlights
     autoCloseBrackets: true,
     search: true,
     lint: true, //uses CodeMirror.lint.mode, in this case CodeMirror.lint.python
@@ -167,16 +168,18 @@ var originalEditor = CodeMirror(document.getElementById("originalEditor"), {
             var db_click_position = originalEditor.coordsChar(click_coords);
             var line = db_click_position.line
             var char = db_click_position.ch
-            getImports(line) // Only search document up to the click position - as can NOT consider definition after the function has been used
+            manuallyimportedFunctions = getImports(line, originalEditor)[0]
+            alternativeModuleNames = getImports(line, originalEditor)[1] // Only search document up to the click position - as can NOT consider definition after the function has been used
 
             // Get the token at the click position
             var token = originalEditor.getTokenAt({line: line, ch: char})
+            console.log(token.type)
             // Check token to see if its a builtin function, can then redirect to corresponsing page
             if (token.type=='builtin'){
                 var builtinFunction = token.string
                 url = 'https://docs.python.org/3/library/functions.html#'+builtinFunction
                 hiddenURL.innerHTML = url
-                //window.open(url)
+                window.open(url)
             }
             // Check for other function calls
             else if(token.type=='property'||token.type=='variable'){
@@ -187,10 +190,10 @@ var originalEditor = CodeMirror(document.getElementById("originalEditor"), {
                     // Open the robotify documentation
                     url = 'https://www.robotify.com/'
                     hiddenURL.innerHTML = url
-                    //window.open(url)
+                    window.open(url)
 
-                    console.log(manuallyimportedFunctions)
-                    console.log(alternativeModuleNames)
+                    //console.log(manuallyimportedFunctions)
+                    //console.log(alternativeModuleNames)
                     // Clear the imported modules and functions for the next scan
                     manuallyimportedFunctions.clear()
                     alternativeModuleNames.clear()
@@ -298,52 +301,85 @@ function setAutocomplete(shouldAutocomplete)
         previewEditor.options.extraKeys["Ctrl-Space"] = null;
     }
 }
-let docu = originalEditor.getDoc()
-docu.markText({line:3,ch:0}, {line:5,ch:2}, {options:{css:"background-color: red;", shared: true}})
-let marks = docu.getAllMarks()
-//console.log(marks )
 
-
-function highlightUnusedFunctions()
+function highlight(editor)
 {
     /**
-     * This function parses through code in editor to find defintions of user defined functions and looks for instances of each function, it then places marker on function definitions which ar not used
+     * This function parses through code in editor and places the appropriate marks on the editor
+     * The editor is passed as a parammeter
      */
-    let docu = originalEditor.getDoc()
-    let userDefinedFunctions = [] // Array to store user defined functions
-    const totalNumLines = originalEditor.lineCount() // Number of lines in editor
+    
+    let docu = editor.getDoc()
+    docu.getAllMarks().forEach(marker => marker.clear());
+
+    let unusedFunctions = getUnusedFunctions(editor) // Get the unused functions and positions to mark
+    let undeclaredVariables = getDeclaredVariables(editor) // Get the undeclared variables and positions to mark
+    console.log(undeclaredVariables)
+    let unusedImports = getImportPositions(editor) // Get unused imports and positions
+    const undVars = document.getElementById("undeclaredVariables");
+    undVars.innerHTML = undeclaredVariables
+
+    // Making the marks
+    // Unused functions
+    for(let markerNumber = 0; markerNumber<unusedFunctions.length; markerNumber=markerNumber+4){
+        let markerLine = unusedFunctions[markerNumber+1]
+        let markerStart = unusedFunctions[markerNumber+2]
+        let markerEnd = unusedFunctions[markerNumber+3]
+        docu.markText({line:markerLine,ch:markerStart,sticky: null}, {line:markerLine,ch:markerEnd, sticky: null}, {css:"filter: brightness(50%)"})
+    }
+    // Unused imports
+    for(let markerNumber = 0; markerNumber<unusedImports.length; markerNumber=markerNumber+4){
+        let markerLine = unusedImports[markerNumber+1]
+        let markerStart = unusedImports[markerNumber+2]
+        let markerEnd = unusedImports[markerNumber+3]
+        docu.markText({line:markerLine,ch:markerStart,sticky: null}, {line:markerLine,ch:markerEnd, sticky: null}, {css:"filter: brightness(50%)"})
+    }
+    // Undeclared variables
+    for(let markerNumber = 0; markerNumber<undeclaredVariables.length; markerNumber=markerNumber+4){
+        let markerLine = undeclaredVariables[markerNumber+1]
+        let markerStart = undeclaredVariables[markerNumber+2]
+        let markerEnd = undeclaredVariables[markerNumber+3]
+        docu.markText({line:markerLine,ch:markerStart,sticky: null}, {line:markerLine,ch:markerEnd, sticky: null}, {css:"text-decoration: underline; text-decoration-color: yellow;text-decoration-thickness: 0.27rem;"})
+    }
+    
+}
+
+function getUnusedFunctions(editor){
+    /**
+     * Function to get the defined functions and returns the unused ones of them and their positions
+     * The editor is passed as a parameter
+     * It returns the unused functions and their positions of the document
+     */
+    let unusedUserDefinedFunctions = [] // Array to store user defined functions
+    const totalNumLines = editor.lineCount() // Number of lines in editor
     // Search through editor for user defined funtion definitions and instances of these functions
     for(let lineNumber=0; lineNumber<totalNumLines; lineNumber++){
-        let lineTokens = originalEditor.getLineTokens(lineNumber, true) // Get the line tokens
+        let lineTokens = editor.getLineTokens(lineNumber, true) // Get the line tokens
         for(let tokenNumber = 0; tokenNumber<lineTokens.length; tokenNumber++){
             let token = lineTokens[tokenNumber]
-            if(token.type=='def'){ // If its a definition, add it to the userDefinedFunctions array along with line, start char, end char
-                userDefinedFunctions.push(token.string, lineNumber, token.start, token.end)
+            if(token.type=='def'){ // If its a definition, add it to the unusedUserDefinedFunctions array along with line, start char, end char
+                unusedUserDefinedFunctions.push(token.string, lineNumber, token.start, token.end)
                 continue
             }
             else if(token.type=='variable'){ // Else if its an instance, remove from array as the function is used
-                for(let arrayIndex=0; arrayIndex<userDefinedFunctions.length; arrayIndex=arrayIndex+4){
-                    if(userDefinedFunctions[arrayIndex]==token.string){
-                        userDefinedFunctions.splice(arrayIndex, 4)
+                for(let arrayIndex=0; arrayIndex<unusedUserDefinedFunctions.length; arrayIndex=arrayIndex+4){
+                    if(unusedUserDefinedFunctions[arrayIndex]==token.string){
+                        unusedUserDefinedFunctions.splice(arrayIndex, 4)
                         continue
                     }
                 }
             }
         }
     }
-    // Making the highlights for the functions which are unused
-    for(let markerNumber = 0; markerNumber<userDefinedFunctions.length; markerNumber=markerNumber+4){
-        let markerLine = userDefinedFunctions[markerNumber+1]
-        let markerStart = userDefinedFunctions[markerNumber+2]
-        let markerEnd = userDefinedFunctions[markerNumber+3]
-        docu.markText({line:markerLine,ch:markerStart}, {line:markerLine,ch:markerEnd}, {options:{css:"color: red"}})
-    }
-    
+    const unusedFunctions = document.getElementById("unusedFunctions");
+    unusedFunctions.innerHTML = unusedUserDefinedFunctions
+    return unusedUserDefinedFunctions
 }
-
-setInterval(highlightUnusedFunctions, 1000)
-
-
+highlight(originalEditor) // Make initial highlights
+originalEditor.on("changes", ()=>highlight(originalEditor)) // Update highlights whenever a change is made in the editor
+highlight(previewEditor) // Make initial highlights
+previewEditor.on("changes", ()=>highlight(originalEditor)) // Update highlights whenever a change is made in the editor
+getImportedModules()
 //form submitting font size & font style
 const fontSizeForm = document.getElementById("fontSizeForm");
 fontSizeForm.addEventListener('submit', (e) => {

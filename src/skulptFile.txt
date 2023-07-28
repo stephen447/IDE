@@ -1,0 +1,120 @@
+let $builtinmodule = function (name) {
+    let mod = {};
+    mod.__name__ = new Sk.builtin.str("flex");
+
+    mod.move_forward = new Sk.builtin.func(function move_forward(distance) {
+
+        let susp = new Sk.misceval.Suspension();
+        Sk.builtin.pyCheckArgsLen("move_forward", 1, 1, 1);
+        susp.resume = function () {
+            if (susp.data["error"]) {
+                    throw new Sk.builtin.IOError(susp.data["error"].message);
+            } else {
+                    return new Sk.builtin.int_(susp.data["result"]);
+            }
+        };
+
+        susp.data = {
+            type: "Sk.promise",
+            promise: flex.moveForward(Sk.ffi.remapToJs(distance)).then(() => susp.resume())
+        };
+
+        return susp;
+    });
+
+    mod.move_backward = new Sk.builtin.func(function move_backward(distance) {
+
+        let susp = new Sk.misceval.Suspension();
+        Sk.builtin.pyCheckArgsLen("move_backward", 1, 1, 1);
+        susp.resume = function () {
+            if (susp.data["error"]) {
+                    throw new Sk.builtin.IOError(susp.data["error"].message);
+            } else {
+                    return new Sk.builtin.int_(susp.data["result"]);
+            }
+        };
+
+        susp.data = {
+            type: "Sk.promise",
+            promise: flex.moveBackward(Sk.ffi.remapToJs(distance)).then(() => susp.resume())
+        };
+
+        return susp;
+    });
+
+    mod.turn = new Sk.builtin.func(function turn(ang) {
+
+        let susp = new Sk.misceval.Suspension();
+        Sk.builtin.pyCheckArgsLen("turn", 1, 1, 1);
+        susp.resume = function () {
+            if (susp.data["error"]) {
+                    throw new Sk.builtin.IOError(susp.data["error"].message);
+            } else {
+                    return new Sk.builtin.int_(susp.data["result"]);
+            }
+        };
+
+        susp.data = {
+            type: "Sk.promise",
+            promise: flex.turn(Sk.ffi.remapToJs(ang)).then(() => susp.resume())
+        };
+
+        return susp;
+    });
+
+    mod.avoid_obstacle_at = new Sk.builtin.func(function avoid_obstacle_at(x,y) {
+
+        let susp = new Sk.misceval.Suspension();
+        Sk.builtin.pyCheckArgsLen("avoid_obstacle_at", 2, 2, 2);
+        susp.resume = function () {
+            if (susp.data["error"]) {
+                    throw new Sk.builtin.IOError(susp.data["error"].message);
+            } else {
+                    return new Sk.builtin.int_(susp.data["result"]);
+            }
+        };
+
+        susp.data = {
+            type: "Sk.promise",
+            promise: flex.avoidObstacle(Sk.ffi.remapToJs(x), Sk.ffi.remapToJs(y)).then(() => susp.resume())
+        };
+
+        return susp;
+    });
+
+    mod.get_angle_to = new Sk.builtin.func(function get_angle_to(x,y) {
+
+        Sk.builtin.pyCheckArgsLen("get_angle_to", 2, 2, 2);
+        return Sk.ffi.remapToPy(flex.getAngleTo(Sk.ffi.remapToJs(x), Sk.ffi.remapToJs(y)));
+    });
+
+    mod.get_sensor_distance = new Sk.builtin.func(function get_sensor_distance(dir) {
+
+        return Sk.ffi.remapToPy(flex.getSensorDistance(Sk.ffi.remapToJs(dir)));
+    });
+
+    mod.get_sensor_name = new Sk.builtin.func(function get_sensor_name(dir) {
+
+        return Sk.ffi.remapToPy(flex.getSensorName(Sk.ffi.remapToJs(dir)));
+    });
+
+    mod.get_coordinates = new Sk.builtin.func(function get_coordinates(coord) {
+
+        Sk.builtin.pyCheckArgsLen("get_coordinates", 1, 1, 1);
+        return Sk.ffi.remapToPy(flex.getPosition(Sk.ffi.remapToJs(coord)));
+    });
+
+    mod.move_forever = new Sk.builtin.func(function move_forever(toggle) {
+
+        Sk.builtin.pyCheckArgsLen("move_forever", 1, 1, 1);
+        return Sk.ffi.remapToPy(flex.move(Sk.ffi.remapToJs(toggle)));
+    });
+
+    mod.get_obstacle_data = new Sk.builtin.func(function get_obstacle_data() {
+
+        Sk.builtin.pyCheckArgsLen("get_obstacle_data", 0, 0, 0);
+        return Sk.ffi.remapToPy(flex.getObstacleData());
+    });
+
+    return mod;
+};
