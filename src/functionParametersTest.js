@@ -1,4 +1,5 @@
-export function getFunctionParameter(editor){
+import { getFunctionDeclarations } from "./getFunctionDeclarations"
+export function getFunctionParameter(editor, declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables){
     let functionVariables = []
     let numLines = editor.lineCount() // Get the total number of lines in editor
     let cursor = editor.getCursor()
@@ -18,11 +19,8 @@ export function getFunctionParameter(editor){
                 lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
                 if(lineTokens.length>0){
                     while(lineTokens[0].type==null&&lineNum<numLines){
-                        for(let vartoken = 0; vartoken<lineTokens.length; vartoken++){
-                            if(lineTokens[vartoken].type=='variable'){
-                                functionVariables.push({text:lineTokens[vartoken].string, className:"function"})
-                            }
-                        }
+                        let declarations = getFunctionDeclarations(lineTokens,lineNum,declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables)
+                        console.log("decs",declarations)
                         lineNum++;
                         lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
                         while(lineTokens.length==0&&lineNum<numLines){

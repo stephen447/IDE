@@ -47,7 +47,6 @@ import {getUserDefinedObjects} from "./getUserDefinedObjects";
 let importedModuleFunctions = [] // Imported modules functions array for storing
 import { getFunctionParameter } from "./functionParametersTest";
 let functionParameters = [] // Array for giving
-console.log("test", functionParameters)
 
 
 // Hidden HTML element for keeping state of the redirect URL's for documentation which is used for verification and testing functionality
@@ -182,7 +181,7 @@ function hintFunc(editor, options) {
     var start = end; //start at the end, and move start back until you reach the start of the word
     while (start && word.test(curLine.charAt(start - 1))) --start;
     var curWord = start != end && curLine.slice(start, end); //curWord checks to make sure start doesn't equal end, then slices the line to get the whole word 
-    console.log("params enter", functionParameters)
+    
     let userDefined = getUserDefinedObjects(editor) // Getting the declared variables and user defined functions
     let userDefinedVariables = userDefined[0] // User defined variables
     let userDefinedFunctions = userDefined[1] // User defined functions
@@ -277,8 +276,8 @@ var previewEditor = CodeMirror(document.getElementById("previewEditor"), {
 // Setting the height of the editor to be larger
 originalEditor.setSize(null, 700);
 previewEditor.setSize(null, 700);
-originalEditor.on("cursorActivity", ()=>functionParameters = getFunctionParameter(originalEditor)) // Update highlights whenever a change is made in the editor
-getFunctionParameter(originalEditor)
+//originalEditor.on("cursorActivity", ()=>functionParameters = getFunctionParameter(originalEditor)) // Update highlights whenever a change is made in the editor
+//getFunctionParameter(originalEditor)
 
 const booleanForm = document.getElementById("booleanForm");
 booleanForm.addEventListener('submit', (e) => {

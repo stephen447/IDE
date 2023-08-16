@@ -1,5 +1,8 @@
 import robotifyFunctions from "./robotifyFunctions"
 import {getImports} from "./getImports" 
+import { getFunctionDeclarations } from "./getFunctionDeclarations"
+import { getFunctionParameter } from "./functionParametersTest"
+
 
 export function getUserDefinedObjects(editor){
     /**
@@ -121,8 +124,12 @@ export function getUserDefinedObjects(editor){
             }
             else if(token.type=='def'&& lineTokens[tok-2].string=='def'){ // If its a function definition - add to user defined functions set
                 userDefinedFunctions.add(token.string)
+                let test = getFunctionParameter(editor, declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables)
+                /*
                 lineNum++
                 lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
+                let testDeclarations = getFunctionDeclarations(lineTokens,declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables)
+                console.log(testDeclarations)
                 if(lineTokens.length>0){
                     while(lineTokens[0].type==null&&lineNum<numLines){
                         lineNum++;
@@ -142,7 +149,7 @@ export function getUserDefinedObjects(editor){
                             }
                         }
                     } 
-                }
+                }*/
             }
             else if(token.type=='def'&& lineTokens[tok-2].string=='class'){ // If its a function definition - add to user defined functions set
                 userDefinedClasses.add(token.string)
@@ -264,3 +271,4 @@ function getDeclaration(tokens, tokenNum){
     return [declaration, tokenNum] 
 
 }
+
