@@ -1,26 +1,22 @@
 import robotifyFunctions from "./robotifyFunctions"
-import {getImports} from "./documentation" 
-/**
- * Edge cases
- * x=y=..
- * x = undeclared variable - undeclared not highlighted
- * check builtin functions
- */
-export function getDeclaredVariables(editor){
+import {getImports} from "./getImports" 
+
+export function getUserDefinedObjects(editor){
     /**
      * This function parses the editor for declared and undeclared variables returns undeclared variables and their positions
-     * It returns a list of undeclared variables
+     * It returns a list of undeclared variables and their positions, declared variables (no positions),
      */
     let undeclaredVariables = [] // Array for the undeclared variables
     let declaredVariables = new Set() // Set for keeping track of stored variables
     let userDefinedFunctions = new Set() // Set for user defined functions
+    let userDefinedClasses = new Set() // Set for user defined functions
     let numLines = editor.lineCount() // Get the total number of lines in editor
-    let manuallyimportedFunctions = getImports(numLines, editor)[0] // Manually imported functions
-    let alternativeModuleNames = getImports(numLines, editor)[1] // Alternative imported names
+    let imports = getImports(numLines, editor)
+    let manuallyimportedFunctions = imports[0] // Manually imported functions
+    let alternativeModuleNames = imports[1] // Alternative imported names
 
     for(let lineNum = 0; lineNum<numLines; lineNum++){ // Parsing the document
         let lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
-        console.log(lineTokens)
         for(let tok = 0; tok<lineTokens.length; tok++){ 
             let token = lineTokens[tok]
             if(token.type=='variable'){ // If token is a variable and is defined, we can continue
@@ -33,6 +29,10 @@ export function getDeclaredVariables(editor){
                         tok = nextTokEquals[2] // Updating the line position
                         if(nextTokEquals[0]==true){ // If there is a next token
                             if(nextTokEquals[1].string=="="){ // If its an equals - could be a declaration... continue
+                                if(getArrayDec(lineTokens, tok+1)==true){
+                                    declaredVariables.add(token.string)
+                                    break
+                                }
                                 let lineDeclarations = [] // Array for string the line declarations - cases like x = y = s = 3
                                 while(tok<lineTokens.length){ // Search the rest of the line for all declarations
                                     let dec = getDeclaration(lineTokens, tok+1) //Get the declaration tokens
@@ -42,17 +42,12 @@ export function getDeclaredVariables(editor){
                                 }
                                 
                                 let finalDeclaration = lineDeclarations[lineDeclarations.length-1] // Get the final declaration to see if its valid - can then make decision on rest of declarations
-                                console.log("final dec", finalDeclaration)
                                 let valid_declaration = true // Set the declaration to be valid - if there is 1 invalid tokens then set to false
-                                console.log("final dec length", finalDeclaration.length)
                                 if(finalDeclaration.length==0){
-                                    console.log("space")
                                     valid_declaration=false
                                 }
                                 for(let d=0; d<finalDeclaration.length; d++){ // Cycle through declarations
-                                    console.log("hello")
                                     if(declaredVariables.has(finalDeclaration[d].string)||finalDeclaration[d].type=='number'||finalDeclaration[d].type=='string'||finalDeclaration[d].string=='true'||finalDeclaration[d].string=='false'||robotifyFunctions.has(finalDeclaration[d].string)||manuallyimportedFunctions.has(finalDeclaration[d].string)||alternativeModuleNames.has(finalDeclaration[d].string)||userDefinedFunctions.has(finalDeclaration[d].string)){ // If the yoken is a declared function, string or number its fine
-                                        console.log("valid!")
                                         continue
                                     }
                                     else{ // Its invalid, its not a valid declaration set to false
@@ -63,7 +58,6 @@ export function getDeclaredVariables(editor){
                                         valid_declaration = false
                                     }
                                 }
-                                console.log("val", valid_declaration)
                                 if(valid_declaration==true){ // If the declaration is valid add it to the declared variables
                                     declaredVariables.add(token.string)
                                     if(lineDeclarations.length>1){ // If there are multiple declarations add them all to declared list
@@ -78,7 +72,6 @@ export function getDeclaredVariables(editor){
                                     }
                                 }
                                 else{ // Add to undeclared variables
-                                    console.log("invalid")
                                     undeclaredVariables.push(token.string, lineNum, token.start, token.end)
                                     if(lineDeclarations.length>1){
                                         for(let dec=0; dec<lineDeclarations.length; dec++){ // If there a multiple invalid imports, add all them to undeclared
@@ -126,17 +119,78 @@ export function getDeclaredVariables(editor){
                 
                 tok = forToken[2]
             }
-            else if(token.type=='def'){ // If its a function definition - add to user defined functions set
+            else if(token.type=='def'&& lineTokens[tok-2].string=='def'){ // If its a function definition - add to user defined functions set
                 userDefinedFunctions.add(token.string)
+                lineNum++
+                lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
+                if(lineTokens.length>0){
+                    while(lineTokens[0].type==null&&lineNum<numLines){
+                        lineNum++;
+                        lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
+                        if(lineTokens.length>0){
+                            if(lineTokens[0].type!=null){
+                                lineNum--
+                            }
+                        }
+                        else{
+                            while(lineTokens.length==0&&lineNum<numLines){
+                                lineNum++
+                                lineTokens = editor.getLineTokens(lineNum, true)
+                            }
+                            if(lineTokens.length==0){
+                                break
+                            }
+                        }
+                    } 
+                }
             }
-            
+            else if(token.type=='def'&& lineTokens[tok-2].string=='class'){ // If its a function definition - add to user defined functions set
+                userDefinedClasses.add(token.string)
+                lineNum++
+                lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
+                if(lineTokens.length>0){
+                    while(lineTokens[0].type==null&&lineNum<numLines){
+                        lineNum++;
+                        lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
+                        if(lineTokens.length>0){
+                            if(lineTokens[0].type!=null){
+                                lineNum--
+                            }
+                        }
+                        else{
+                            while(lineTokens.length==0&&lineNum<numLines){
+                                lineNum++
+                                lineTokens = editor.getLineTokens(lineNum, true)
+                            }
+                            if(lineTokens.length==0){
+                                break
+                            }
+                        }
+                    } 
+                }
+            }
             else if(token.type=="keyword"&&(token.string=="import"||token.string=="from")){ // Dont need to flag imported variables(modules&functions) as undefined
                 break
             }
         }
     }
-    console.log("Undeclared", undeclaredVariables)
-    return undeclaredVariables // Return list of undeclared variable
+    userDefinedFunctions = Array.from(userDefinedFunctions) // Convert set to an array
+    declaredVariables = Array.from(declaredVariables) // Convert set to an array
+    userDefinedClasses = Array.from(userDefinedClasses) // Convert set to an array
+
+    let userDefinedFunctionObjects = []
+    let userDefinedClassObjects = []
+    let declaredVariableObjects = []
+    for(let i = 0; i<userDefinedFunctions.length;i++){
+        userDefinedFunctionObjects[i] = {text:userDefinedFunctions[i], className:"function", class: "userDefinedFunctions"}
+    }
+    for(let i = 0; i<declaredVariables.length;i++){
+        declaredVariableObjects[i] = {text:declaredVariables[i], className:"variable", class: "userDefinedVariables"}
+    }
+    for(let i = 0; i<userDefinedClasses.length;i++){
+        userDefinedClassObjects[i] = {text:userDefinedClasses[i], className:"class", class: "userDefinedVariables"}
+    }
+    return [declaredVariableObjects, userDefinedFunctionObjects, userDefinedClassObjects] // Return list of undeclared variable
 }
 
 function getNextToken(tokens, tokenNum){
@@ -152,7 +206,41 @@ function getNextToken(tokens, tokenNum){
     }
     return [false, null, tokenNum]
 }
+function getArrayDec(tokens, tokenNum){
+    /**
+     * Array for checking if the array is an array declaration
+     * fed linetokens and position of line
+     * returns true or false if its a valid array declaration or not
+     */
+    let nextValidToken=""
+    let lastValidToken=""
 
+    let startToken=1
+    let endToken=1
+    if(tokens[tokenNum]!=undefined){
+        startToken = tokens[tokenNum].string
+    }
+    if(tokens[tokenNum+1]!=undefined){
+        endToken = tokens[tokenNum+1].string
+    }
+    if(startToken==" "){
+        nextValidToken=endToken
+    }
+    else{
+        nextValidToken=startToken
+    }
+    let len = tokens.length-1
+    if(tokens[len].string==" "){
+        lastValidToken=tokens[len-1].string
+    }
+    else{
+        lastValidToken=tokens[len].string
+    }
+    if(nextValidToken=="["&&lastValidToken=="]"){
+        return true
+    }
+    return false    
+}
 function getDeclaration(tokens, tokenNum){
     /**
      * This function gets the declaration tokens for a declaration

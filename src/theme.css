@@ -1,4 +1,123 @@
 
+@import "~codemirror/addon/hint/show-hint.css";
+
+#context-menu {
+  position: fixed;
+  z-index: 10000;
+  width: 100px;
+  background: #1b1a1a;
+  border-radius: 10px;
+  display: none;
+}
+
+#context-menu .contextMenuItem {
+  width: 100px;
+  font-size: 12px;
+  color: #050505;
+  text-align:left;
+}
+#context-menu.visible{
+  display: block;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: pre;
+  color: black;
+  cursor: pointer;
+  padding-left: 22px;
+  position: relative;
+  line-height: 1.5;  
+}
+
+.CodeMirror-hint:before {
+  position: absolute;
+  left: 2px;
+  bottom: 2px;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: bold;
+  height: 15px;
+  width: 15px;
+  line-height: 16px;
+  text-align: center;
+  color: white;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+.CodeMirror-hint {
+  color: black;
+}
+
+.function.CodeMirror-hint{
+  background: yellow;
+}
+
+.function.CodeMirror-hint{
+  background: grey;
+  color: black;
+}
+.function.CodeMirror-hint:before {
+  content: "F";
+  background:rgb(53, 125, 203);
+  color: black;
+}
+.function.CodeMirror-hint:hover{
+  background: rgb(56, 56, 56);
+}
+.function.CodeMirror-hint-active {
+  background: rgb(56, 56, 56);
+}
+.variable.CodeMirror-hint{
+  background: grey;
+  color: black;
+}
+.variable.CodeMirror-hint:before{
+  color: black;
+  content: "V";
+  background: rgb(30, 210, 60);
+}
+.variable.CodeMirror-hint:hover{
+  background: rgb(56, 56, 56);
+}
+.variable.CodeMirror-hint-active {
+  background: rgb(56, 56, 56);
+}
+.module.CodeMirror-hint{
+  background: grey;
+  color: black;
+}
+.module.CodeMirror-hint:before{
+  color: black;
+  content: "M";
+  background: rgb(0, 209, 246);
+}
+.module.CodeMirror-hint:hover{
+  background: rgb(56, 56, 56);
+}
+.module.CodeMirror-hint-active {
+  background: rgb(56, 56, 56);
+}
+.class.CodeMirror-hint{
+  background: grey;
+  color: black;
+}
+.class.CodeMirror-hint:before{
+  color: black;
+  content: "C";
+  background: rgb(219, 62, 18);
+}
+.class.CodeMirror-hint:hover{
+  background: rgb(56, 56, 56);
+}
+.class.CodeMirror-hint-active {
+  background: rgb(56, 56, 56);
+}
+
+
 :root {
   --brackets: #f8f8f2;
   --cursor: #f8f8f0;

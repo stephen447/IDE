@@ -117,6 +117,23 @@ describe('Testing defined/undefined variables', () => {
     let imports = cy.get('[data-cy="undeclaredVariables"]')
     imports.should('have.text', expectedUndeclaredVariables).timeSince('visit')
   })
+  it('Edge Case: Simple invalid declartion with out spaces', () => {
+    cy.visit('http://localhost:8080').timeMark('visit')
+    let expectedUndeclaredVariables = 'y,0,2,3,x,0,0,1'
+    let editor = cy.get('[data-cy="editor"]')
+    editor.type("x=y")
+    let imports = cy.get('[data-cy="undeclaredVariables"]')
+    imports.should('have.text', expectedUndeclaredVariables).timeSince('visit')
+  })
+  it('Edge Case: Array declaration', () => {
+    cy.visit('http://localhost:8080').timeMark('visit')
+    let expectedUndeclaredVariables = ''
+    let editor = cy.get('[data-cy="editor"]')
+    editor.type(`x=[]
+    array=x`)
+    let imports = cy.get('[data-cy="undeclaredVariables"]')
+    imports.should('have.text', expectedUndeclaredVariables).timeSince('visit')
+  })
   
 
   

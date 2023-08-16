@@ -5,7 +5,7 @@
         <title>Config</title>
         <link rel="stylesheet" href="index.css">
     </head>
-    <body>
+    <body id="body" data-cy="body">
         <div id="colorPickingDiv" style="display:flex">
             <div class="topRowColumn colorColumn">
                 Brackets: <input type="color" id="brackets"><br>
@@ -50,10 +50,10 @@
                 <form id="booleanForm">
                     <label for="linting">Linting:</label>
                     <input type="checkbox" id="linting" name="linting" checked="true"><br>
-                    <label for="autocomplete">Autocomplete:</label>
+                    <label for="autocomplete" id="autocompleteLabel">Autocomplete:</label>
                     <input type="checkbox" id="autocomplete" name="autocomplete" checked="true">
                     <br><br>
-                    <input type="submit">
+                    <input type="submit" id="submitButton">
                   </form>                  
             </div>
         </div>
@@ -66,10 +66,25 @@
         <div>
             <div class="codeEditor" id="originalEditor" data-cy="editor"></div>
             <div class="codeEditor" id="previewEditor"></div>
+            <div>
+                Upload a Skulpt File: <input type="file" multiple id="uploadSkulpt" data-cy="uploadSkulpt">
+            </div>
             <p hidden class="tests" id = "hiddenURL" data-cy="hiddenURL"> home</p>
-            <p  class="tests" id = "testImports" data-cy="testImports"> home</p>
-            <p  class="tests" id = "unusedFunctions" data-cy="unusedFunctions"> home</p>
-            <p  class="tests" id = "undeclaredVariables" data-cy="undeclaredVariables"> home</p>
+            <p hidden class="tests" id = "testImports" data-cy="testImports"> home</p>
+            <p hidden class="tests" id = "unusedFunctions" data-cy="unusedFunctions"> home</p>
+            <p hidden class="tests" id = "undeclaredVariables" data-cy="undeclaredVariables"> home</p>
+            <p hidden class="tests" id = "autocompleteList" data-cy="autocompleteList"></p>
+            <p hidden class="tests" id = "autocompleteListTypes" data-cy="autocompleteListTypes"></p>
+            <p class="tests" id = "contextMenuTest" data-cy="contextMenuTest"></p>
+
+            
+        </div>
+        <div id="context-menu" data-cy="context-menu">
+            <button class="contextMenuItem" id="contextAutocomplete" data-cy="contextAutocomplete">Autocomplete</button>
+            <button class="contextMenuItem" id="contextDocumentation" data-cy="contextDocumentation">Documentation</button>
+            <button class="contextMenuItem" id="contextCut" data-cy="contextCut">Cut</button>
+            <button class="contextMenuItem" id="contextCopy" data-cy="contextCopy">Copy</button>
+            <button class="contextMenuItem" id="contextPaste" data-cy="contextPaste">Paste</button>
         </div>
     </body>
     

@@ -1,0 +1,30 @@
+let $builtinmodule = function (name) {
+    let mod = {};
+    mod.__name__ = new Sk.builtin.str("satellite");
+
+    mod.get_animal_coordinates = new Sk.builtin.func(function get_animal_coordinates() {
+
+        Sk.builtin.pyCheckArgsLen("get_animal_coordinates", 0, 0, 0);
+        return Sk.ffi.remapToPy(getAnimalCoordinates());
+    });
+
+    mod.get_total_animals_number = new Sk.builtin.func(function get_total_animals_number() {
+
+        Sk.builtin.pyCheckArgsLen("get_total_animals_number", 0, 0, 0);
+        return Sk.ffi.remapToPy(window.getTotalAnimalsNumber());
+    });
+
+    mod.get_time_remaining = new Sk.builtin.func(function get_time_remaining() {
+
+        Sk.builtin.pyCheckArgsLen("get_time_remaining", 0, 0, 0);
+        return Sk.ffi.remapToPy(window.getTimeRemaining());
+    });
+
+    mod.get_animal_data = new Sk.builtin.func(function get_animal_data(specificKey) {
+
+        Sk.builtin.pyCheckArgsLen("get_animal_data", 1, 1, 1);
+        return Sk.ffi.remapToPy(window.getAnimalData(Sk.ffi.remapToJs(specificKey)));
+    });
+
+    return mod;
+};

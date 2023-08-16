@@ -23,34 +23,69 @@ import 'codemirror/addon/search/search.js'
 import 'codemirror/addon/search/searchcursor.js'
 //auto complete
 import 'codemirror/addon/hint/show-hint.js'
-import { hintFunc } from "./hinting.js";
+//import { hintFunc } from "./hinting.js";
 //linting
 import 'codemirror/addon/lint/lint.js'
 import { parse } from "./errorChecker.js"
-// Undeclared vaiables
-import {getDeclaredVariables} from "./undeclaredVariables"
 // Highlighting unused variables
-import { getImports } from "./documentation";
-
+// Themes
 import './themeEditor.js'
 import {setFont} from './themeEditor.js'
-//Robotify functions
-import robotifyFunctions from './robotifyFunctions.js'
-let alternativeModuleNames = new Set()
-let manuallyimportedFunctions = new Set()
 
-import { getImportPositions } from "./documentation";
+//Documentation
+import { documentation } from "./documentation";
+import staffSettings from './staffSettings.json'
 
-import { getImportedModules } from "./getImportedModules";
+//Highlighting and dimming undeclared variables and unused functions
+import { highlight } from "./highlight";
+
+//Autocomplete
+const getSuggestedList = require("./autocompleteAlgorithm")
+import { getModuleObjects } from "./getModuleObjects";
+import {getManuallyImportedModuleFunctions } from "./getManuallyImportedModuleFunctions";
+import {getUserDefinedObjects} from "./getUserDefinedObjects";
+let importedModuleFunctions = [] // Imported modules functions array for storing
+import { getFunctionParameter } from "./functionParametersTest";
+let functionParameters = [] // Array for giving
+console.log("test", functionParameters)
 
 
-
-//Hidden HTML element for keeping state of the redirect URL's for documentation which is used for verification and testing functionality
+// Hidden HTML element for keeping state of the redirect URL's for documentation which is used for verification and testing functionality
 const hiddenURL = document.getElementById("hiddenURL");
 hiddenURL.innerHTML = "home"
-let startCo = ``
+let startCodeem = ``
+let startCode=`def function(a,b,c):
+    x=5
+    print(x)
+    return f
+x=5
+z=5
+
+class f:
+    stephen = "S"
+    step = f
+    def __init__():
+        x=5
+
+f.stephen`
+let startC = `import satellite
+import flex as f
+import codeMirror
+from axel import move_forward, move_backward
+
+def testFunction():
+  return 1
+
+def code():
+  return "code"
+
+c=5
+a=1
+b=2
+flex.
+f.`
 //initial code put into the editor
-let startCode = `import codeMirror # Standard import
+let startCo = `import codeMirror # Standard import
 import axel # Standard Robotify import
 import math as m # Alternative standard import
 import byte as b # Alternative Robotify import
@@ -139,10 +174,58 @@ for x in range(3):
 # Print the collected animal locations.
 print(animal_locations)
 `
+function hintFunc(editor, options) {
+    var WORD = /[\w$]+/, RANGE = 500;
+    var word = options && options.word || WORD;
+    var cur = editor.getCursor(), curLine = editor.getLine(cur.line);
+    var end = cur.ch // End is cursor character ( guessing that ch is character )
+    var start = end; //start at the end, and move start back until you reach the start of the word
+    while (start && word.test(curLine.charAt(start - 1))) --start;
+    var curWord = start != end && curLine.slice(start, end); //curWord checks to make sure start doesn't equal end, then slices the line to get the whole word 
+    console.log("params enter", functionParameters)
+    let userDefined = getUserDefinedObjects(editor) // Getting the declared variables and user defined functions
+    let userDefinedVariables = userDefined[0] // User defined variables
+    let userDefinedFunctions = userDefined[1] // User defined functions
+    let userDefinedClasses = userDefined[2]
+    let importedModules = getModuleObjects(editor) // Imported modules
+    let manuallyImportedModuleFunctions = getManuallyImportedModuleFunctions(editor) // Getting the manually imported module functions
+    let numSuggestions = staffSettings.autofillSuggestions // Retrieving the number of suggestions from the staff JSON form
 
+    // This is for getting the functions imported for modules
+    let pos = editor.getCursor() //Get the position in the editor
+    let currentToken = editor.getTokenAt(pos) // Get the current token
+    let lineNum = pos.line //Get the line token
+    let char = currentToken.start // Get the end char for token before
+    let prevToken = editor.getTokenAt({line: lineNum, ch: char}) // Get the previous token
+    char = prevToken.start // Update the end char for previous char
+    let secPrevToken = editor.getTokenAt({line: lineNum, ch: char}) // Get the second previous char
+    
+    if(currentToken.string=="."){ // If current token is a dot (property) - only have suggestions for that module. Pass the module in questions name to getSuggestedList
+        if(prevToken.type=='variable'){
+            let alternateName = importedModules.find(element=>element.alternative==prevToken.string)
+            if(alternateName!=undefined){
+                prevToken.string = alternateName.text
+            }
+            let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionParameters, importedModuleFunctions, prevToken.string, importedModules)
+            return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+        }
+    }
+    else if(prevToken.string=="."){ //If the previous token is a dot (property)
+        if(secPrevToken.type=='variable'){
+            let alternateName = importedModules.find(element=>element.alternative==secPrevToken.string)
+            if(alternateName!=undefined){
+                secPrevToken.string = alternateName.text
+            }
+            let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionParameters, importedModuleFunctions, secPrevToken.string,importedModules)
+            return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+        }
+    }
+    //Otherwise general look up, set module to be null
+    let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionParameters, importedModuleFunctions, null, importedModules, manuallyImportedModuleFunctions) // Fetching the suggested list using the 
+    return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
+}
 
-
-//the editor on the left, does not respond to CSS changes
+// Editor on the left, does not respond to CSS changes
 export var originalEditor = CodeMirror(document.getElementById("originalEditor"), {
     value: startCode,
     mode:  "python",
@@ -156,57 +239,17 @@ export var originalEditor = CodeMirror(document.getElementById("originalEditor")
         "Esc": function(cm) {cm.display.input.blur()},  //leave focus on the editor with Esc
         "Ctrl-Space": async function(cm) { cm.showHint({
             hint: hintFunc,         // show autocompletion
-            completeSingle: false   //does not autocomplete when there is only a single match
+            completeSingle: false,   //does not autocomplete when there is only a single match
         })},
         "LeftTripleClick": function(){
-            // Get the click position
-            var click_coord = originalEditor.cursorCoords()
-            var click_coords = {left: click_coord.left, top: click_coord.top};
-            var url = 'homepage'
-            
-            // Get the position of the click in the editor in terms of line and character index
-            var db_click_position = originalEditor.coordsChar(click_coords);
-            var line = db_click_position.line
-            var char = db_click_position.ch
-            manuallyimportedFunctions = getImports(line, originalEditor)[0]
-            alternativeModuleNames = getImports(line, originalEditor)[1] // Only search document up to the click position - as can NOT consider definition after the function has been used
-
-            // Get the token at the click position
-            var token = originalEditor.getTokenAt({line: line, ch: char})
-            console.log(token.type)
-            // Check token to see if its a builtin function, can then redirect to corresponsing page
-            if (token.type=='builtin'){
-                var builtinFunction = token.string
-                url = 'https://docs.python.org/3/library/functions.html#'+builtinFunction
-                hiddenURL.innerHTML = url
-                window.open(url)
-            }
-            // Check for other function calls
-            else if(token.type=='property'||token.type=='variable'){
-                let function_char = char-token.string.length-1
-                let robotify_func = originalEditor.getTokenAt({line:line, ch:function_char})
-                let robotifyIndividualFunc = originalEditor.getTokenAt({line:line, ch:char})
-                if(robotifyFunctions.has(robotify_func.string)==true||alternativeModuleNames.has(robotify_func.string)==true||manuallyimportedFunctions.has(robotifyIndividualFunc.string)){
-                    // Open the robotify documentation
-                    url = 'https://www.robotify.com/'
-                    hiddenURL.innerHTML = url
-                    window.open(url)
-
-                    //console.log(manuallyimportedFunctions)
-                    //console.log(alternativeModuleNames)
-                    // Clear the imported modules and functions for the next scan
-                    manuallyimportedFunctions.clear()
-                    alternativeModuleNames.clear()
-                }
-            }
+            documentation(originalEditor)
         }
     },
     gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
     theme: "constTheme"
 });
 
-
-//the editor on the right, DOES respond to CSS changes
+// Editor on the right, DOES respond to CSS changes
 var previewEditor = CodeMirror(document.getElementById("previewEditor"), {
     value: originalEditor.getDoc().linkedDoc(), //makes changes in one affect the other
     mode:  "python",
@@ -221,40 +264,21 @@ var previewEditor = CodeMirror(document.getElementById("previewEditor"), {
         "Esc": function(cm) {cm.display.input.blur()},
         "Ctrl-Space": async function(cm) { cm.showHint({
             hint: hintFunc,
-            completeSingle: false
+            completeSingle: false,
         })},
-        "LeftTripleClick": function(){
-            /**
-             * Get the click position, get the token at the click position, if token is a builtin, redirect otherwise do nothing
-             */
-            // Get the click position
-            getAlternativeImports
-            var click_coord = previewEditor.cursorCoords()
-            var click_coords = {left: click_coord.left, top: click_coord.top};
-            
-            // Get the position of the click in the editor in terms of line and character index
-            var db_click_position = previewEditor.coordsChar(click_coords);
-            var line = db_click_position.line
-            var char = db_click_position.ch
-
-            // Get the token at the click position
-            var token = previewEditor.getTokenAt({line: line, ch: char})
-            //console.log(token.type)
-            // Check token to see if its a builtin function, can then redirect to corresponsing page
-            //console.log(token.type)
-            if (token.type=='builtin'){
-                var keyword = token.string
-                var url = 'https://docs.python.org/3/library/functions.html#'+keyword
-                window.open(url)
-            }
+        "LeftTripleClick": function(editor){
+            documentation(previewEditor)
         }
     },
     gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"],
     theme: "theme"
 });
+
+// Setting the height of the editor to be larger
 originalEditor.setSize(null, 700);
 previewEditor.setSize(null, 700);
-
+originalEditor.on("cursorActivity", ()=>functionParameters = getFunctionParameter(originalEditor)) // Update highlights whenever a change is made in the editor
+getFunctionParameter(originalEditor)
 
 const booleanForm = document.getElementById("booleanForm");
 booleanForm.addEventListener('submit', (e) => {
@@ -273,7 +297,6 @@ booleanForm.addEventListener('submit', (e) => {
     previewEditor.refresh();
   
 })
-
 
 //sets options for BOTH editors
 function setEditorsOptions(option, value)
@@ -302,85 +325,45 @@ function setAutocomplete(shouldAutocomplete)
     }
 }
 
-function highlight(editor)
-{
-    /**
-     * This function parses through code in editor and places the appropriate marks on the editor
-     * The editor is passed as a parammeter
-     */
-    
-    let docu = editor.getDoc()
-    docu.getAllMarks().forEach(marker => marker.clear());
+highlight(originalEditor) // Make initial highlights
+originalEditor.on("changes", ()=>highlight(originalEditor)) // Update highlights whenever a change is made in the editor
+highlight(previewEditor) // Make initial highlights
+previewEditor.on("changes", ()=>highlight(previewEditor)) // Update highlights whenever a change is made in the editor
+const contextMenuTest = document.getElementById("contextMenuTest"); 
+originalEditor.on("changes", ()=>contextMenuTest.innerHTML = originalEditor.getValue()) // Update highlights whenever a change is made in the editor
 
-    let unusedFunctions = getUnusedFunctions(editor) // Get the unused functions and positions to mark
-    let undeclaredVariables = getDeclaredVariables(editor) // Get the undeclared variables and positions to mark
-    console.log(undeclaredVariables)
-    let unusedImports = getImportPositions(editor) // Get unused imports and positions
-    const undVars = document.getElementById("undeclaredVariables");
-    undVars.innerHTML = undeclaredVariables
-
-    // Making the marks
-    // Unused functions
-    for(let markerNumber = 0; markerNumber<unusedFunctions.length; markerNumber=markerNumber+4){
-        let markerLine = unusedFunctions[markerNumber+1]
-        let markerStart = unusedFunctions[markerNumber+2]
-        let markerEnd = unusedFunctions[markerNumber+3]
-        docu.markText({line:markerLine,ch:markerStart,sticky: null}, {line:markerLine,ch:markerEnd, sticky: null}, {css:"filter: brightness(50%)"})
-    }
-    // Unused imports
-    for(let markerNumber = 0; markerNumber<unusedImports.length; markerNumber=markerNumber+4){
-        let markerLine = unusedImports[markerNumber+1]
-        let markerStart = unusedImports[markerNumber+2]
-        let markerEnd = unusedImports[markerNumber+3]
-        docu.markText({line:markerLine,ch:markerStart,sticky: null}, {line:markerLine,ch:markerEnd, sticky: null}, {css:"filter: brightness(50%)"})
-    }
-    // Undeclared variables
-    for(let markerNumber = 0; markerNumber<undeclaredVariables.length; markerNumber=markerNumber+4){
-        let markerLine = undeclaredVariables[markerNumber+1]
-        let markerStart = undeclaredVariables[markerNumber+2]
-        let markerEnd = undeclaredVariables[markerNumber+3]
-        docu.markText({line:markerLine,ch:markerStart,sticky: null}, {line:markerLine,ch:markerEnd, sticky: null}, {css:"text-decoration: underline; text-decoration-color: yellow;text-decoration-thickness: 0.27rem;"})
-    }
-    
-}
-
-function getUnusedFunctions(editor){
-    /**
-     * Function to get the defined functions and returns the unused ones of them and their positions
-     * The editor is passed as a parameter
-     * It returns the unused functions and their positions of the document
-     */
-    let unusedUserDefinedFunctions = [] // Array to store user defined functions
-    const totalNumLines = editor.lineCount() // Number of lines in editor
-    // Search through editor for user defined funtion definitions and instances of these functions
-    for(let lineNumber=0; lineNumber<totalNumLines; lineNumber++){
-        let lineTokens = editor.getLineTokens(lineNumber, true) // Get the line tokens
-        for(let tokenNumber = 0; tokenNumber<lineTokens.length; tokenNumber++){
-            let token = lineTokens[tokenNumber]
-            if(token.type=='def'){ // If its a definition, add it to the unusedUserDefinedFunctions array along with line, start char, end char
-                unusedUserDefinedFunctions.push(token.string, lineNumber, token.start, token.end)
-                continue
-            }
-            else if(token.type=='variable'){ // Else if its an instance, remove from array as the function is used
-                for(let arrayIndex=0; arrayIndex<unusedUserDefinedFunctions.length; arrayIndex=arrayIndex+4){
-                    if(unusedUserDefinedFunctions[arrayIndex]==token.string){
-                        unusedUserDefinedFunctions.splice(arrayIndex, 4)
-                        continue
+const skulptFile = document.getElementById("uploadSkulpt");
+skulptFile.addEventListener('change', async (event) => {
+    const fileList = event.target.files; //Get the files that were loaded
+    if(fileList.length > 0) // Reads the content of the file the user loaded
+    {
+        for(let file = 0; file<fileList.length; file++){
+            const reader = new FileReader(); // Define a filereader
+            reader.readAsText(fileList[file], "UTF-8"); // Read file as text
+            reader.onload = function (e) { //When file fully loaded
+                let data = reader.result // Extract data
+                const lines = data.split("\n") // Split the data into lines
+                let moduleName = "name_not_found" // testing
+                for(let i = 0; i<lines.length; i++){ // Search through the lines
+                    var trimmedStr = lines[i].trimStart(); // Remove whitespace at the beginning of lines
+                    let startsWithMod = trimmedStr.startsWith("mod") // Check if the line starts with mod - true/false
+                    
+                    if(startsWithMod==true){
+                        let words = trimmedStr.split(" ") // Separate line into words
+                        let func = words[0].slice(4, words[0].length) //Extract function name
+                        if(func=='__name__'){
+                            moduleName = trimmedStr.slice(trimmedStr.indexOf("(") + 2,trimmedStr.lastIndexOf(")")-1);
+                        }
+                        else{
+                            // Push the function name into
+                            importedModuleFunctions.push({text:func, className:"function", class: moduleName})
+                        }
                     }
                 }
             }
         }
     }
-    const unusedFunctions = document.getElementById("unusedFunctions");
-    unusedFunctions.innerHTML = unusedUserDefinedFunctions
-    return unusedUserDefinedFunctions
-}
-highlight(originalEditor) // Make initial highlights
-originalEditor.on("changes", ()=>highlight(originalEditor)) // Update highlights whenever a change is made in the editor
-highlight(previewEditor) // Make initial highlights
-previewEditor.on("changes", ()=>highlight(originalEditor)) // Update highlights whenever a change is made in the editor
-getImportedModules()
-//form submitting font size & font style
+});
 const fontSizeForm = document.getElementById("fontSizeForm");
 fontSizeForm.addEventListener('submit', (e) => {
 
@@ -398,4 +381,125 @@ fontSizeForm.addEventListener('submit', (e) => {
   previewEditor.refresh();
   
 });
+
+if(staffSettings.autofill==false){
+    document.getElementById("autocomplete").checked = false;
+    document.getElementById("submitButton").click()
+    document.getElementById("autocomplete").remove()
+    document.getElementById("autocompleteLabel").remove()
+}
+
+// Context menu - custom context menu
+const contextMenu = document.getElementById("context-menu"); // Retrieving the context menu div
+const editorInstance = document.getElementById("originalEditor") // Getting the editor instance
+const contextAutocomplete = document.getElementById("contextAutocomplete") // Autocomplete button in context menu
+const contextDocumentation = document.getElementById("contextDocumentation")  // Documentation button in context menu
+const contextCopy = document.getElementById("contextCopy")  // Copy button in context menu
+const contextPaste = document.getElementById("contextPaste")  // Paste button in context menu
+const contextCut = document.getElementById("contextCut")  // Cut button in context menu
+
+// Event listener for making context menu apper on right click
+editorInstance.addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+  const { clientX: mouseX, clientY: mouseY } = event;
+  const {normalizedX, normalizedY} = normalizePosition(mouseX, mouseY) //Normalise position of context menu so it
+  // Position the context menu
+  contextMenu.style.top = `${normalizedY}px`;
+  contextMenu.style.left = `${normalizedX}px`;
+  contextMenu.classList.add("visible"); // Remove the context menu when a button is pressed on it
+})
+
+// Event handler that if anywhere outside of context menu is clicked , the contet men is closed
+editorInstance.addEventListener("click", (event) => {
+    if (event.target.offsetParent != contextMenu) {
+      contextMenu.classList.remove("visible");
+    }
+});
+
+const normalizePosition = (mouseX, mouseY) => {
+    /**
+     * This function normalise the position of the context menu so it does not appear out of bounds
+     * Parameters are the x and y position of the mouse click
+     * Returns the normalised positions of mouse click
+    **/
+    const {
+      left: scopeOffsetX,
+      top: scopeOffsetY,
+    } = editorInstance.getBoundingClientRect();
+  
+    const scopeX = mouseX - scopeOffsetX;
+    const scopeY = mouseY - scopeOffsetY;
+  
+    //Check if the element will go out of bounds
+    const outOfBoundsOnX = scopeX + contextMenu.clientWidth > editorInstance.clientWidth;
+    const outOfBoundsOnY = scopeY + contextMenu.clientHeight > editorInstance.clientHeight;
+  
+    let normalizedX = mouseX;
+    let normalizedY = mouseY;
+  
+    // Normalise x and y
+    if (outOfBoundsOnX) {
+        normalizedX =scopeOffsetX + editorInstance.clientWidth - contextMenu.clientWidth;
+    }
+    if (outOfBoundsOnY) {
+        normalizedY = scopeOffsetY + editorInstance.clientWidth - contextMenu.clientHeight;
+    }
+
+    return {normalizedX, normalizedY};
+}
+
+// Event handler for toggling the autocomplete button
+contextAutocomplete.addEventListener("click", () => {
+    let autocomplete = document.getElementById("autocomplete") // Get autocomplete checkbox
+    if(autocomplete.checked==true){
+        autocomplete.checked=false  // Invert checkbox
+        document.getElementById("submitButton").click() // Click submit button
+        contextMenu.classList.remove("visible"); // Close context menu
+    }
+    else{
+        autocomplete.checked=true // Invert checkbox
+        document.getElementById("submitButton").click()  // Click submit button
+        contextMenu.classList.remove("visible"); // Close context menu
+    }
+});
+
+// Event handler for documentation
+contextDocumentation.addEventListener("click", () => {
+    documentation(originalEditor) // Call documentation function
+    contextMenu.classList.remove("visible");  // Close context menu
+});
+
+// Event handler for cut operation
+contextCut.addEventListener('click', (e) => {
+    document.execCommand('copy'); // Call copy command
+    let start = originalEditor.getCursor(true) // Get start position of the selction
+    let end = originalEditor.getCursor(false) // Get end position of the selction
+    let doc = originalEditor.getDoc() // Retrive the document inside editor instance
+    doc.replaceRange("", start, end) // Cut out selected text in document
+    contextMenu.classList.remove("visible"); // Close context menu
+})
+
+// Event handler for copy operation
+contextCopy.addEventListener('click', (e) => {
+    document.execCommand('copy'); // Call copy command
+    contextMenu.classList.remove("visible"); // Close context menu
+})
+
+// Event handler for paste operation
+contextPaste.addEventListener('click', (e) => {
+    navigator.clipboard.readText() // Read the text from the clipboard
+  .then(text => { 
+    var doc = originalEditor.getDoc(); // Get the document from editor instance
+    var cursor = doc.getCursor(); // Get the cursor position
+    doc.replaceRange(text, cursor); // Insert the clipboard text into cursor position
+    contextMenu.classList.remove("visible"); // Close context menu
+  })
+  .catch(err => { // Catch error if text not read
+    console.error('Failed to read clipboard contents: ', err); // Log error
+  });
+})
+
+
+
+
 
