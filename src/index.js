@@ -53,20 +53,7 @@ let functionParameters = [] // Array for giving
 const hiddenURL = document.getElementById("hiddenURL");
 hiddenURL.innerHTML = "home"
 let startCodeem = ``
-let startCode=`def function(a,b,c):
-    x=5
-    print(x)
-    return f
-x=5
-z=5
-
-class f:
-    stephen = "S"
-    step = f
-    def __init__():
-        x=5
-
-f.stephen`
+let startCode=``
 let startC = `import satellite
 import flex as f
 import codeMirror
@@ -186,6 +173,8 @@ function hintFunc(editor, options) {
     let userDefinedVariables = userDefined[0] // User defined variables
     let userDefinedFunctions = userDefined[1] // User defined functions
     let userDefinedClasses = userDefined[2]
+    let functionDeclarations = userDefined[3]
+    console.log("function declarations", )
     let importedModules = getModuleObjects(editor) // Imported modules
     let manuallyImportedModuleFunctions = getManuallyImportedModuleFunctions(editor) // Getting the manually imported module functions
     let numSuggestions = staffSettings.autofillSuggestions // Retrieving the number of suggestions from the staff JSON form
@@ -205,7 +194,7 @@ function hintFunc(editor, options) {
             if(alternateName!=undefined){
                 prevToken.string = alternateName.text
             }
-            let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionParameters, importedModuleFunctions, prevToken.string, importedModules)
+            let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionDeclarations, importedModuleFunctions, prevToken.string, importedModules)
             return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
         }
     }
@@ -215,12 +204,12 @@ function hintFunc(editor, options) {
             if(alternateName!=undefined){
                 secPrevToken.string = alternateName.text
             }
-            let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionParameters, importedModuleFunctions, secPrevToken.string,importedModules)
+            let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionDeclarations, importedModuleFunctions, secPrevToken.string,importedModules)
             return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
         }
     }
     //Otherwise general look up, set module to be null
-    let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionParameters, importedModuleFunctions, null, importedModules, manuallyImportedModuleFunctions) // Fetching the suggested list using the 
+    let list = getSuggestedList(curWord, numSuggestions, userDefinedFunctions, userDefinedVariables, userDefinedClasses, functionDeclarations, importedModuleFunctions, null, importedModules, manuallyImportedModuleFunctions) // Fetching the suggested list using the 
     return {list: list, from: CodeMirror.Pos(cur.line, start), to: CodeMirror.Pos(cur.line, end)};
 }
 
@@ -265,7 +254,7 @@ var previewEditor = CodeMirror(document.getElementById("previewEditor"), {
             hint: hintFunc,
             completeSingle: false,
         })},
-        "LeftTripleClick": function(editor){
+        "LeftTripleClick": function(previewEditor){
             documentation(previewEditor)
         }
     },

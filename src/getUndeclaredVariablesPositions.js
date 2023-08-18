@@ -1,4 +1,3 @@
-import robotifyFunctions from "./robotifyFunctions"
 import {getImports} from "./getImports" 
 
 export function getUndeclaredVariablesPositions(editor){
@@ -20,7 +19,7 @@ export function getUndeclaredVariablesPositions(editor){
         for(let tok = 0; tok<lineTokens.length; tok++){ //Parse each token in the line
             let token = lineTokens[tok]
             if(token.type=='variable'){ // If token is a variable and is defined, we can continue
-                if(declaredVariables.has(token.string)||robotifyFunctions.has(token.string)||manuallyimportedFunctions.has(token.string)||alternativeModuleNames.has(token.string)||userDefinedFunctions.has(token.string)){ // If variable is declared - all good continue to the next token
+                if(declaredVariables.has(token.string)||manuallyimportedFunctions.has(token.string)||alternativeModuleNames.has(token.string)||userDefinedFunctions.has(token.string)){ // If variable is declared - all good continue to the next token
                     continue
                 }
                 else{ // Else if it is a declaration of a variable
@@ -47,7 +46,7 @@ export function getUndeclaredVariablesPositions(editor){
                                     valid_declaration=false
                                 }
                                 for(let d=0; d<finalDeclaration.length; d++){ // Cycle through declarations
-                                    if(declaredVariables.has(finalDeclaration[d].string)||finalDeclaration[d].type=='number'||finalDeclaration[d].type=='string'||finalDeclaration[d].string=='true'||finalDeclaration[d].string=='false'||robotifyFunctions.has(finalDeclaration[d].string)||manuallyimportedFunctions.has(finalDeclaration[d].string)||alternativeModuleNames.has(finalDeclaration[d].string)||userDefinedFunctions.has(finalDeclaration[d].string)){ // If the yoken is a declared function, string or number its fine
+                                    if(declaredVariables.has(finalDeclaration[d].string)||finalDeclaration[d].type=='number'||finalDeclaration[d].type=='string'||finalDeclaration[d].string=='true'||finalDeclaration[d].string=='false'||manuallyimportedFunctions.has(finalDeclaration[d].string)||alternativeModuleNames.has(finalDeclaration[d].string)||userDefinedFunctions.has(finalDeclaration[d].string)){ // If the yoken is a declared function, string or number its fine
                                         continue
                                     }
                                     else{ // Its invalid, its not a valid declaration set to false

@@ -25,6 +25,7 @@ export function getImports(totalNumLines, editor){
                 if(lineTokens[start+4].string=='as'){ // If there is an alternative name, need to store otherwise it is stored
                     moduleObjects.push({name:lineTokens[start+2].string, className:"module",alternative:lineTokens[start+6].string})
                     alternativeModuleNames.add(lineTokens[start+6].string)
+                    alternativeModuleNames.add(lineTokens[start+2].string)
                 }
             }
             // If importing from a robotify module or another imported module
@@ -54,7 +55,7 @@ export function getImports(totalNumLines, editor){
             }
         }
     }
-    //console.log("Module objects!", moduleObjects)
+    console.log("Module objects!", alternativeModuleNames)
     return [manuallyimportedFunctions, alternativeModuleNames]
 }
 

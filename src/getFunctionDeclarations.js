@@ -1,11 +1,38 @@
-export function getFunctionDeclarations(lineTokens, lineNum, declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables){
+export function getFunctionDeclarations(lineTokens, declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, functionDeclarations){
     console.log("line tokens", lineTokens)
-    let functionDeclarations = new Set()
-    let functionUndeclaredVariables = []
+    console.log(functionDeclarations)
+    //let functionDeclarations = new Set()
+    //let functionUndeclaredVariables = []
+    
+    /*
+    lineNum = 0
+    let cursor = editor.getCursor()
+    let numLines = cursor.line
+    while(lineNum<numLines){
+        let functionDeclarations = [];
+        let lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
+        while(lineTokens[0].string==" "){
+
+        
+        
+            while(lineTokens.length==0&&lineNum<numLines){
+                lineNum++
+                lineTokens = editor.getLineTokens(lineNum, true)
+            }
+            if(lineTokens.length==0){
+                functionVariables = []
+                break
+            }
+            else if(lineTokens[0].type!=null){
+                functionVariables = []
+            }
+        
+        } 
+    }*/
     for(let tok = 0; tok<lineTokens.length; tok++){ 
         let token = lineTokens[tok]
         if(token.type=='variable'){ // If token is a variable and is defined, we can continue
-            if(declaredVariables.has(token.string)||robotifyFunctions.has(token.string)||manuallyimportedFunctions.has(token.string)||alternativeModuleNames.has(token.string)||userDefinedFunctions.has(token.string)){ // If variable is declared - all good continue to the next token
+            if(declaredVariables.has(token.string)||robotifyFunctions.has(token.string)||manuallyimportedFunctions.has(token.string)||alternativeModuleNames.has(token.string)||userDefinedFunctions.has(token.string)||functionDeclarations.has(token.string)){ // If variable is declared - all good continue to the next token
                 continue
             }
             else{ // Else if it is a declaration of a variable
@@ -32,14 +59,10 @@ export function getFunctionDeclarations(lineTokens, lineNum, declaredVariables,r
                                 valid_declaration=false
                             }
                             for(let d=0; d<finalDeclaration.length; d++){ // Cycle through declarations
-                                if(declaredVariables.has(finalDeclaration[d].string)||finalDeclaration[d].type=='number'||finalDeclaration[d].type=='string'||finalDeclaration[d].string=='true'||finalDeclaration[d].string=='false'||robotifyFunctions.has(finalDeclaration[d].string)||manuallyimportedFunctions.has(finalDeclaration[d].string)||alternativeModuleNames.has(finalDeclaration[d].string)||userDefinedFunctions.has(finalDeclaration[d].string)){ // If the yoken is a declared function, string or number its fine
+                                if(declaredVariables.has(finalDeclaration[d].string)||finalDeclaration[d].type=='number'||finalDeclaration[d].type=='string'||finalDeclaration[d].string=='true'||finalDeclaration[d].string=='false'||robotifyFunctions.has(finalDeclaration[d].string)||manuallyimportedFunctions.has(finalDeclaration[d].string)||alternativeModuleNames.has(finalDeclaration[d].string)||userDefinedFunctions.has(finalDeclaration[d].string)||functionDeclarations.has(finalDeclaration[d].string)){ // If the yoken is a declared function, string or number its fine
                                     continue
                                 }
                                 else{ // Its invalid, its not a valid declaration set to false
-                                    if(finalDeclaration[d].type=='variable'){
-                                        undeclaredVariables.push(finalDeclaration[d].string, lineNum, finalDeclaration[d].start, finalDeclaration[d].end)
-                                        
-                                    }
                                     valid_declaration = false
                                 }
                             }
@@ -56,35 +79,13 @@ export function getFunctionDeclarations(lineTokens, lineNum, declaredVariables,r
                                     }
                                 }
                             }
-                            else{ // Add to undeclared variables
-                                functionUndeclaredVariables.push(token.string, lineNum, token.start, token.end)
-                                if(lineDeclarations.length>1){
-                                    for(let dec=0; dec<lineDeclarations.length; dec++){ // If there a multiple invalid imports, add all them to undeclared
-                                        let de = lineDeclarations[dec]
-                                        for(let i = 0; i<de.length; de++){
-                                            if(de[i].type=='variable'){
-                                                functionUndeclaredVariables.push(de[i].string, lineNum, de[i].start, de[i].end)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        else{ // If next token not equals its not declared or being declared so add it to undeclared variables
-                            if(token.type=='variable'){ // Add to the undefined list - maybe redundant
-                                functionUndeclaredVariables.push(token.string, lineNum, token.start, token.end)
-                            }
-                        }
-                    } 
-                    else{ // If there are not more tokens on line - cant be declaration - add to undeclared list
-                        functionUndeclaredVariables.push(token.string, lineNum, token.start, token.end)
-                    }                
-                }
-                else{ // if length of line is less than 3, not a declaration so add to undeclared list
-                    functionUndeclaredVariables.push(token.string, lineNum, token.start, token.end)
+                        
+                        } 
+                    }              
                 }
             }
         }
+        /*
         // Delete a deleted variable
         else if(token.type=='keyword'&&token.string=='del'){ // If function is 'del' - need to delete a variable from declared list
             let deletedVariable = getNextToken(lineTokens, tok+1)
@@ -95,7 +96,7 @@ export function getFunctionDeclarations(lineTokens, lineNum, declaredVariables,r
                 }
             }
             
-        }
+        }*/
         else if(token.type=='keyword'&&token.string=='for'){ // Disregard FOR loop var - for x in range(0, 4):
             let forToken = getNextToken(lineTokens, tok+1)
             if(forToken[0]==true){
@@ -110,8 +111,8 @@ export function getFunctionDeclarations(lineTokens, lineNum, declaredVariables,r
             break
         }
     }
-    console.log("line declarations", functionDeclarations)
-    return declaredVariables
+    //console.log("line declarations", functionDeclarations)
+    return functionDeclarations
 }
 function getNextToken(tokens, tokenNum){
     /**

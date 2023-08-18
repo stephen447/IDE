@@ -4,7 +4,7 @@ function autocompleteAlgorithm(keyword, length, userDefinedFunctions, userDefine
      * Its take the keyword, the length of the suggested list, user defined functions set, user defined variables, imported modules, imported module functions, manually imported functions from modules and the module the suggestions must be from as parameters
      * it returns the suggested list
      */
-    console.log("params", functionParameters)
+    console.log("function parameters",userDefinedVariables)
     let sugestedList = [] // Initiating the sugested list
     // If the autocomplete is for a module - only suggest function for specified modules
     if(module!=null){ //Module parameter is set to null if its a general autocomplete, otherwise it will be the name of the module
@@ -16,7 +16,7 @@ function autocompleteAlgorithm(keyword, length, userDefinedFunctions, userDefine
         return sugestedList // Return list
     }
     // Otherwise generate list using non module specific objects
-    let masterList = [userDefinedVariables, userDefinedFunctions, userDefinedClasses, functionParameters, importedModules, manuallyImportedModuleFunctions] // Master list contains all other objects which will be searched ina specific order
+    let masterList = [userDefinedVariables,functionParameters, userDefinedFunctions, userDefinedClasses, importedModules, manuallyImportedModuleFunctions] // Master list contains all other objects which will be searched ina specific order
     let listNum = 0 // Increment for the lists in the master list
     if(keyword==false){ // The keyword is false, there is no keyword - set to an empty string
         keyword=""

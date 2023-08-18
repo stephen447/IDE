@@ -17,6 +17,7 @@ export function getUserDefinedObjects(editor){
     let imports = getImports(numLines, editor)
     let manuallyimportedFunctions = imports[0] // Manually imported functions
     let alternativeModuleNames = imports[1] // Alternative imported names
+    let functionDeclarations = []
 
     for(let lineNum = 0; lineNum<numLines; lineNum++){ // Parsing the document
         let lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
@@ -124,13 +125,18 @@ export function getUserDefinedObjects(editor){
             }
             else if(token.type=='def'&& lineTokens[tok-2].string=='def'){ // If its a function definition - add to user defined functions set
                 userDefinedFunctions.add(token.string)
-                let test = getFunctionParameter(editor, declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables)
-                /*
+                let cursorPos = editor.getCursor()
+                let MaxPos = cursorPos.line
+                if(lineNum<=MaxPos){
+                    functionDeclarations = getFunctionParameter(editor, lineNum, declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables)
+                    console.log("test", functionDeclarations)
+                }
+                
+                
                 lineNum++
-                lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
-                let testDeclarations = getFunctionDeclarations(lineTokens,declaredVariables,robotifyFunctions, manuallyimportedFunctions, alternativeModuleNames, userDefinedFunctions, undeclaredVariables)
-                console.log(testDeclarations)
+                lineTokens = editor.getLineTokens(lineNum, true)
                 if(lineTokens.length>0){
+                    console.log("test line tokens", lineTokens)
                     while(lineTokens[0].type==null&&lineNum<numLines){
                         lineNum++;
                         lineTokens = editor.getLineTokens(lineNum, true) // Get line tokens
@@ -149,7 +155,8 @@ export function getUserDefinedObjects(editor){
                             }
                         }
                     } 
-                }*/
+                }
+                
             }
             else if(token.type=='def'&& lineTokens[tok-2].string=='class'){ // If its a function definition - add to user defined functions set
                 userDefinedClasses.add(token.string)
@@ -188,6 +195,7 @@ export function getUserDefinedObjects(editor){
     let userDefinedFunctionObjects = []
     let userDefinedClassObjects = []
     let declaredVariableObjects = []
+    let functionDeclarationObjects = []
     for(let i = 0; i<userDefinedFunctions.length;i++){
         userDefinedFunctionObjects[i] = {text:userDefinedFunctions[i], className:"function", class: "userDefinedFunctions"}
     }
@@ -197,7 +205,11 @@ export function getUserDefinedObjects(editor){
     for(let i = 0; i<userDefinedClasses.length;i++){
         userDefinedClassObjects[i] = {text:userDefinedClasses[i], className:"class", class: "userDefinedVariables"}
     }
-    return [declaredVariableObjects, userDefinedFunctionObjects, userDefinedClassObjects] // Return list of undeclared variable
+    for(let i = 0; i<functionDeclarations.length;i++){
+        functionDeclarationObjects[i] = {text:functionDeclarations[i], className:"variable", class: "userDefinedVariables"}
+    }
+    //console.log(" declared Variables", declaredVariableObjects)
+    return [declaredVariableObjects, userDefinedFunctionObjects, userDefinedClassObjects, functionDeclarationObjects] // Return list of undeclared variable
 }
 
 function getNextToken(tokens, tokenNum){
